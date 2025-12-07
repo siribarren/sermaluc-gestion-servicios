@@ -224,8 +224,26 @@ export class SyncService {
     });
 
     try {
-      // Usar el GID para especificar la hoja correcta
-      const range = 'Sheet1!A2:C'; // Ajustar según columnas HR (RUT, Fecha Ingreso, etc.)
+      // Obtener el nombre de la hoja usando el GID
+      // El GID en la URL es un string, pero sheetId en la API es un número
+      const gidNumber = parseInt(gid, 10);
+      
+      const spreadsheetMetadata = await this.sheets.spreadsheets.get({
+        spreadsheetId: this.HR_SHEET_ID,
+      });
+
+      const sheet = spreadsheetMetadata.data.sheets.find(
+        (s: any) => s.properties.sheetId === gidNumber,
+      );
+
+      if (!sheet) {
+        throw new Error(`Sheet with GID ${gid} (sheetId: ${gidNumber}) not found`);
+      }
+
+      const sheetName = sheet.properties.title;
+      const range = `${sheetName}!A2:C`; // Ajustar según columnas HR (RUT, Fecha Ingreso, etc.)
+      
+      this.logger.log(`Reading sheet "${sheetName}" (GID: ${gid}, sheetId: ${gidNumber}) for ${syncType}`);
       
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.HR_SHEET_ID,
