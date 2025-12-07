@@ -206,6 +206,28 @@ gcloud run services describe gestion-frontend --region=us-central1
 
 ## 🐛 Troubleshooting
 
+### Error: "Permission denied" o "does not have permission"
+
+Si encuentras errores de permisos al ejecutar el script:
+
+1. **Verifica tus permisos actuales**:
+   ```bash
+   gcloud projects get-iam-policy sermaluc-gestion-servicios \
+     --flatten="bindings[].members" \
+     --filter="bindings.members:user:$(gcloud config get-value account)" \
+     --format="table(bindings.role)"
+   ```
+
+2. **Solicita permisos al administrador**:
+   - Ver `SOLUCIONAR_PERMISOS.md` para instrucciones detalladas
+   - Ver `COMANDOS_SOLICITAR_PERMISOS.md` para comandos exactos que el administrador debe ejecutar
+   - El comando más simple es otorgar el rol `roles/editor`
+
+3. **Después de obtener permisos**, ejecuta el script nuevamente:
+   ```bash
+   ./setup-github-gcp.sh
+   ```
+
 ### Error: "Repository not found"
 - Verifica que el repositorio esté conectado en Cloud Build
 - Verifica que tengas permisos en el repositorio de GitHub

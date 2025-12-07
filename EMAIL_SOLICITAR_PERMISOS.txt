@@ -1,0 +1,30 @@
+Asunto: Solicitud de Permisos GCP - Proyecto sermaluc-gestion-servicios
+
+Hola [Nombre del Administrador],
+
+Necesito permisos en el proyecto GCP "sermaluc-gestion-servicios" para configurar 
+la integración de GitHub con Cloud Build y realizar deployments automáticos.
+
+Mi email de GCP es: simon.iribarren@sermaluc.cl
+
+Por favor, ejecuta este comando (recomendado):
+
+gcloud projects add-iam-policy-binding sermaluc-gestion-servicios \
+  --member="user:simon.iribarren@sermaluc.cl" \
+  --role="roles/editor"
+
+Este rol me permitirá:
+- Habilitar las APIs necesarias (Cloud Build, Cloud Run, etc.)
+- Crear triggers de Cloud Build
+- Desplegar servicios en Cloud Run
+- Gestionar recursos del proyecto
+
+Si prefieres otorgar permisos más específicos, puedes consultar el archivo 
+COMANDOS_SOLICITAR_PERMISOS.md en el repositorio.
+
+Después de otorgar los permisos, puedo continuar con la configuración del 
+sistema de deployment automático.
+
+Gracias,
+Simón Iribarren
+

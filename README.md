@@ -140,9 +140,19 @@ curl -X POST http://localhost:3001/internal/sync/collaborators
 
 ### Guías de Deployment
 
+- **[SINCRONIZAR_GITHUB_GCP.md](./SINCRONIZAR_GITHUB_GCP.md)** - ⭐ **Guía completa para sincronizar GitHub con GCP**
+- **[CONFIGURAR_GITHUB_GCP.md](./CONFIGURAR_GITHUB_GCP.md)** - Configuración detallada de integración GitHub
 - **[GCP_DEPLOYMENT.md](./GCP_DEPLOYMENT.md)** - Guía completa paso a paso
 - **[QUICK_START_GCP.md](./QUICK_START_GCP.md)** - Guía rápida
 - **[GIT_SETUP.md](./GIT_SETUP.md)** - Configuración de Git
+
+### ⚠️ Problemas de Permisos
+
+Si encuentras errores de permisos al configurar GCP:
+
+- **[SOLUCIONAR_PERMISOS.md](./SOLUCIONAR_PERMISOS.md)** - Guía para resolver problemas de permisos
+- **[COMANDOS_SOLICITAR_PERMISOS.md](./COMANDOS_SOLICITAR_PERMISOS.md)** - Comandos exactos para el administrador
+- **[EMAIL_SOLICITAR_PERMISOS.txt](./EMAIL_SOLICITAR_PERMISOS.txt)** - Template de email para solicitar permisos
 
 El sistema se despliega automáticamente mediante Cloud Build cuando se hace push a la rama principal.
 
@@ -230,10 +240,21 @@ Ver diagrama ER completo en [docs/DIAGRAMS.md](./docs/DIAGRAMS.md)
 
 ## Documentación Adicional
 
+### Setup y Desarrollo
 - **[SETUP.md](./SETUP.md)** - Guía de setup local detallada
 - **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - ⭐ **Guía completa para crear y configurar la base de datos**
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guía de deployment manual
 - **[docs/DIAGRAMS.md](./docs/DIAGRAMS.md)** - Diagramas Mermaid del sistema
+
+### Deployment y GCP
+- **[SINCRONIZAR_GITHUB_GCP.md](./SINCRONIZAR_GITHUB_GCP.md)** - ⭐ **Sincronizar repositorio GitHub con GCP**
+- **[CONFIGURAR_GITHUB_GCP.md](./CONFIGURAR_GITHUB_GCP.md)** - Configuración de integración GitHub
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guía de deployment manual
+- **[GCP_DEPLOYMENT.md](./GCP_DEPLOYMENT.md)** - Deployment en GCP paso a paso
+
+### Permisos y Troubleshooting
+- **[SOLUCIONAR_PERMISOS.md](./SOLUCIONAR_PERMISOS.md)** - Resolver problemas de permisos
+- **[COMANDOS_SOLICITAR_PERMISOS.md](./COMANDOS_SOLICITAR_PERMISOS.md)** - Comandos para administradores
+- **[EMAIL_SOLICITAR_PERMISOS.txt](./EMAIL_SOLICITAR_PERMISOS.txt)** - Template de email
 
 ## Licencia
 

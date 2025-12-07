@@ -17,19 +17,46 @@ echo "=================================================="
 # Paso 1: Configurar proyecto
 echo ""
 echo "📋 Paso 1: Configurando proyecto GCP..."
-gcloud config set project $PROJECT_ID
+gcloud config set project $PROJECT_ID || {
+  echo "   ❌ Error: No se pudo configurar el proyecto"
+  echo "   Verifica que tengas acceso al proyecto: $PROJECT_ID"
+  echo "   Verifica que el proyecto exista: gcloud projects list"
+  exit 1
+}
+
+# Verificar acceso al proyecto
+echo "   Verificando acceso al proyecto..."
+gcloud projects describe $PROJECT_ID --quiet > /dev/null 2>&1 || {
+  echo "   ❌ Error: No tienes acceso al proyecto $PROJECT_ID"
+  echo "   Necesitas permisos en el proyecto o que un administrador te otorgue acceso"
+  echo "   Contacta al administrador del proyecto para obtener permisos"
+  exit 1
+}
+echo "   ✅ Acceso al proyecto verificado"
 
 # Paso 2: Habilitar APIs
 echo ""
 echo "📋 Paso 2: Habilitando APIs necesarias..."
+echo "   Habilitando APIs esenciales..."
+
+# APIs esenciales (requeridas)
 gcloud services enable \
   cloudbuild.googleapis.com \
   run.googleapis.com \
   sqladmin.googleapis.com \
   secretmanager.googleapis.com \
   artifactregistry.googleapis.com \
-  sourcerepo.googleapis.com \
-  --quiet
+  --quiet || {
+  echo "   ⚠️  Error habilitando APIs esenciales. Verifica permisos."
+  echo "   Necesitas el rol: roles/serviceusage.serviceUsageAdmin"
+  exit 1
+}
+
+# API opcional (solo si usas Cloud Source Repositories, no necesario para GitHub)
+echo "   Habilitando API opcional (sourcerepo)..."
+gcloud services enable sourcerepo.googleapis.com --quiet 2>/dev/null || {
+  echo "   ⚠️  sourcerepo.googleapis.com no disponible o no necesario (usando GitHub)"
+}
 
 echo "✅ APIs habilitadas"
 
