@@ -23,16 +23,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar solo lo necesario para producción
+# Copiar dependencias, dist y prisma (incluye el cliente generado)
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package*.json ./
 
-# Generar Prisma Client en la imagen de producción
-RUN npx prisma generate
+# ❌ Eliminar esta línea
+# RUN npx prisma generate
 
 EXPOSE 3001
 
 CMD ["npm", "run", "start:prod"]
-
