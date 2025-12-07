@@ -52,11 +52,11 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--add-cloudsql-instances'
-      - '$$PROJECT_ID:us-central1:nomina-sql'
-      - '--set-secrets'
-      - 'DATABASE_URL=backend-database-url:latest,GOOGLE_SERVICE_ACCOUNT_KEY=google-service-account-key:latest'
+      - 'sermaluc-gestion-servicios:us-central1:nomina-sql'
       - '--set-env-vars'
-      - 'FRONTEND_URL=$$FRONTEND_URL'
+      - 'DATABASE_URL=$$DATABASE_URL,FRONTEND_URL=$$FRONTEND_URL'
+      - '--set-secrets'
+      - 'GOOGLE_SERVICE_ACCOUNT_KEY=google-service-account-key:latest'
     id: 'deploy-backend'
     waitFor: ['push-backend']
 
