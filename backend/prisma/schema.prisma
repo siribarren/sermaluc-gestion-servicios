@@ -7,9 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/* ===========================
-   ENUMS
-   =========================== */
+// ===========================
+//   ENUMS
+//   =========================== 
 
 enum CollaboratorStatus {
   ACTIVO
@@ -41,9 +41,9 @@ enum SyncStatus {
   PARTIAL
 }
 
-/* ===========================
-   MODELS
-   =========================== */
+// ===========================
+//   MODELS
+//  ===========================
 
 model Collaborator {
   id                   String               @id @default(uuid())
