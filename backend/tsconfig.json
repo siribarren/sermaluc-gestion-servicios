@@ -19,7 +19,7 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "types": ["node"]   // 👈 AÑADE ESTA LÍNEA
   }
 }
-
