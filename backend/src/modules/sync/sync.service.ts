@@ -2,11 +2,19 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { google } from 'googleapis';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { CollaboratorStatus, ChangeType, SyncType, SyncStatus } from '@prisma/client';
 
 @Injectable()
 export class SyncService {
   private readonly logger = new Logger(SyncService.name);
   private sheets: any;
+
+  // IDs de las hojas de Google Sheets
+  private readonly MASTER_SHEET_ID = '1TA-fkVC7T7dlBa9VWIPOIeSEOosDk_Cd1-VFKERByng';
+  private readonly MASTER_SHEET_GID = '269393876'; // GID de la hoja específica
+  private readonly HR_SHEET_ID = '1UhHy65woxg5h9TLOvKY3qWqU77npKuQQKP8in5PaPb8';
+  private readonly HR_SHEET_CHILE_GID = '0';
+  private readonly HR_SHEET_PERU_GID = '306343796';
 
   constructor(
     private prisma: PrismaService,
@@ -42,8 +50,8 @@ export class SyncService {
     this.logger.log('Starting Master Sheet sync...');
     const syncLog = await this.prisma.syncLog.create({
       data: {
-        syncType: 'master_sheet',
-        status: 'running',
+        syncType: SyncType.MASTER_SHEET,
+        status: SyncStatus.RUNNING,
         recordsProcessed: 0,
         recordsCreated: 0,
         recordsUpdated: 0,
@@ -52,11 +60,11 @@ export class SyncService {
     });
 
     try {
-      const spreadsheetId = '1TA-fkVC7T7dlBa9VWIPOIeSEOosDk_Cd1-VFKERByng';
-      const range = 'Sheet1!A2:O'; // Ajustar según tu hoja
+      // Usar el GID específico de la hoja
+      const range = `Sheet1!A2:O`; // Ajustar según columnas reales
       
       const response = await this.sheets.spreadsheets.values.get({
-        spreadsheetId,
+        spreadsheetId: this.MASTER_SHEET_ID,
         range,
       });
 
@@ -88,7 +96,7 @@ export class SyncService {
         const collaboratorData = {
           rutDni: rutDni?.trim(),
           nombre: nombre?.trim(),
-          estado: estado?.trim(),
+          estado: this.normalizeEstado(estado?.trim()),
           fechaIngresoSermaluc: this.parseDate(fechaIngresoSermaluc),
           fechaFiniquito: this.parseDate(fechaFiniquito),
           fechaFinalizacion: this.parseDate(fechaFinalizacionSS),
@@ -166,7 +174,7 @@ export class SyncService {
       await this.prisma.syncLog.update({
         where: { id: syncLog.id },
         data: {
-          status: 'success',
+          status: SyncStatus.SUCCESS,
           recordsProcessed: processed,
           recordsCreated: created,
           recordsUpdated: updated,
@@ -180,7 +188,7 @@ export class SyncService {
       await this.prisma.syncLog.update({
         where: { id: syncLog.id },
         data: {
-          status: 'error',
+          status: SyncStatus.ERROR,
           errors: { message: error.message, stack: error.stack },
           completedAt: new Date(),
         },
@@ -197,17 +205,17 @@ export class SyncService {
     this.logger.log('Starting HR Sheets sync...');
     
     // Sync Chile HR Sheet
-    await this.syncHRSheet('1UhHy65woxg5h9TLOvKY3qWqU77npKuQQKP8in5PaPb8', '0', 'hr_sheet_chile');
+    await this.syncHRSheet(this.HR_SHEET_CHILE_GID, SyncType.HR_SHEET_CHILE);
     
     // Sync Peru HR Sheet
-    await this.syncHRSheet('1UhHy65woxg5h9TLOvKY3qWqU77npKuQQKP8in5PaPb8', '306343796', 'hr_sheet_peru');
+    await this.syncHRSheet(this.HR_SHEET_PERU_GID, SyncType.HR_SHEET_PERU);
   }
 
-  private async syncHRSheet(spreadsheetId: string, gid: string, syncType: string) {
+  private async syncHRSheet(gid: string, syncType: SyncType) {
     const syncLog = await this.prisma.syncLog.create({
       data: {
         syncType,
-        status: 'running',
+        status: SyncStatus.RUNNING,
         recordsProcessed: 0,
         recordsCreated: 0,
         recordsUpdated: 0,
@@ -216,10 +224,11 @@ export class SyncService {
     });
 
     try {
-      const range = 'Sheet1!A2:C'; // Ajustar según columnas HR
+      // Usar el GID para especificar la hoja correcta
+      const range = 'Sheet1!A2:C'; // Ajustar según columnas HR (RUT, Fecha Ingreso, etc.)
       
       const response = await this.sheets.spreadsheets.values.get({
-        spreadsheetId,
+        spreadsheetId: this.HR_SHEET_ID,
         range,
         majorDimension: 'ROWS',
       });
@@ -251,8 +260,8 @@ export class SyncService {
                 field: 'fecha_ingreso_oficial',
                 oldValue: collaborator.fechaIngresoOficial?.toISOString(),
                 newValue: parsedDate.toISOString(),
-                changeType: 'hr_data_update',
-                source: syncType,
+                changeType: ChangeType.OTHER,
+                source: syncType.toLowerCase(),
               },
             });
             updated++;
@@ -264,7 +273,7 @@ export class SyncService {
       await this.prisma.syncLog.update({
         where: { id: syncLog.id },
         data: {
-          status: 'success',
+          status: SyncStatus.SUCCESS,
           recordsProcessed: processed,
           recordsUpdated: updated,
           completedAt: new Date(),
@@ -277,7 +286,7 @@ export class SyncService {
       await this.prisma.syncLog.update({
         where: { id: syncLog.id },
         data: {
-          status: 'error',
+          status: SyncStatus.ERROR,
           errors: { message: error.message, stack: error.stack },
           completedAt: new Date(),
         },
@@ -290,6 +299,27 @@ export class SyncService {
       take: 10,
       orderBy: { startedAt: 'desc' },
     });
+  }
+
+  private normalizeEstado(estado: string): CollaboratorStatus {
+    if (!estado) return CollaboratorStatus.OTRO;
+    
+    const estadoUpper = estado.toUpperCase().trim();
+    
+    if (estadoUpper.includes('ACTIVO PERU') || estadoUpper === 'ACTIVO PERÚ') {
+      return CollaboratorStatus.ACTIVO_PERU;
+    }
+    if (estadoUpper.includes('ACTIVO')) {
+      return CollaboratorStatus.ACTIVO;
+    }
+    if (estadoUpper.includes('CAMBIO CC') || estadoUpper.includes('CAMBIO CENTRO COSTO')) {
+      return CollaboratorStatus.CAMBIO_CC;
+    }
+    if (estadoUpper.includes('FINIQUITO') || estadoUpper.includes('FINIQUITADO')) {
+      return CollaboratorStatus.FINIQUITADO;
+    }
+    
+    return CollaboratorStatus.OTRO;
   }
 
   private async upsertCostCenter(code: string) {
@@ -331,7 +361,7 @@ export class SyncService {
         field: 'estado',
         oldValue: existing.estado,
         newValue: newData.estado,
-        changeType: 'status_change',
+        changeType: ChangeType.STATUS_CHANGE,
         source: 'master_sheet',
       });
     }
@@ -342,7 +372,7 @@ export class SyncService {
         field: 'service',
         oldValue: existing.serviceId,
         newValue: service?.id,
-        changeType: 'service_change',
+        changeType: ChangeType.SERVICE_CHANGE,
         source: 'master_sheet',
       });
     }
@@ -353,7 +383,7 @@ export class SyncService {
         field: 'cost_center',
         oldValue: existing.costCenterId,
         newValue: costCenter?.id,
-        changeType: 'cost_center_change',
+        changeType: ChangeType.COST_CENTER_CHANGE,
         source: 'master_sheet',
       });
     }
@@ -364,7 +394,7 @@ export class SyncService {
         field: 'client',
         oldValue: existing.clientId,
         newValue: client?.id,
-        changeType: 'client_change',
+        changeType: ChangeType.CLIENT_CHANGE,
         source: 'master_sheet',
       });
     }
@@ -375,7 +405,7 @@ export class SyncService {
         field: 'tarifa',
         oldValue: existing.tarifa?.toString(),
         newValue: newData.tarifa?.toString(),
-        changeType: 'tariff_change',
+        changeType: ChangeType.TARIFA_CHANGE,
         source: 'master_sheet',
       });
     }
@@ -451,4 +481,3 @@ export class SyncService {
     return null;
   }
 }
-

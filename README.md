@@ -2,12 +2,16 @@
 
 Sistema profesional de gestión de colaboradores y servicios para Sermaluc, desplegado en Google Cloud Platform.
 
+## 📊 Diagramas del Sistema
+
+Para ver todos los diagramas de arquitectura, flujos y procesos de negocio, consulta [docs/DIAGRAMS.md](./docs/DIAGRAMS.md)
+
 ## Arquitectura
 
 - **Backend**: NestJS + TypeScript + Prisma (PostgreSQL)
 - **Frontend**: Next.js 14 + Tailwind CSS + shadcn/ui
 - **Deployment**: Google Cloud Platform (Cloud Run)
-- **Database**: Cloud SQL (PostgreSQL) - Instancia: `nomina-sql`
+- **Database**: Cloud SQL (PostgreSQL 17.7) - Instancia: `nomina-sql`, Base de datos: `db-nomina`
 - **CI/CD**: Cloud Build
 - **Scheduler**: Cloud Scheduler (sincronización periódica)
 
@@ -36,6 +40,8 @@ sermaluc-gestion-servicios/
 │   ├── Dockerfile
 │   └── package.json
 ├── cloudbuild.yaml          # CI/CD Pipeline
+├── docs/
+│   └── DIAGRAMS.md          # Diagramas Mermaid
 └── README.md
 ```
 
@@ -132,6 +138,12 @@ curl -X POST http://localhost:3001/internal/sync/collaborators
 
 ## Deployment
 
+### Guías de Deployment
+
+- **[GCP_DEPLOYMENT.md](./GCP_DEPLOYMENT.md)** - Guía completa paso a paso
+- **[QUICK_START_GCP.md](./QUICK_START_GCP.md)** - Guía rápida
+- **[GIT_SETUP.md](./GIT_SETUP.md)** - Configuración de Git
+
 El sistema se despliega automáticamente mediante Cloud Build cuando se hace push a la rama principal.
 
 ### Configuración de Cloud Build
@@ -164,9 +176,10 @@ gcloud scheduler jobs create http sync-collaborators \
 ## Brand Guidelines
 
 - **Fuente**: Rubik (SemiBold/Bold para títulos, Regular para cuerpo)
-- **Color primario**: #0072FF
+- **Color primario**: #0056CC (Azul oscuro del logo)
 - **UI**: Limpia, moderna, legible y accesible
 - **Componentes**: Tailwind CSS + shadcn/ui
+- **Logo**: `logo_sermaluc_horizontal.png`
 
 ## Desarrollo
 
@@ -196,6 +209,8 @@ gcloud scheduler jobs create http sync-collaborators \
 - **ChangeLog**: Registro de cambios
 - **SyncLog**: Logs de sincronización
 
+Ver diagrama ER completo en [docs/DIAGRAMS.md](./docs/DIAGRAMS.md)
+
 ## API Endpoints
 
 ### Colaboradores
@@ -213,7 +228,13 @@ gcloud scheduler jobs create http sync-collaborators \
 - `POST /internal/sync/collaborators` - Ejecutar sincronización
 - `GET /internal/sync/health` - Estado de sincronizaciones
 
+## Documentación Adicional
+
+- **[SETUP.md](./SETUP.md)** - Guía de setup local detallada
+- **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - ⭐ **Guía completa para crear y configurar la base de datos**
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guía de deployment manual
+- **[docs/DIAGRAMS.md](./docs/DIAGRAMS.md)** - Diagramas Mermaid del sistema
+
 ## Licencia
 
 Privado - Sermaluc
-

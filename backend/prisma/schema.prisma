@@ -7,115 +7,168 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/* ===========================
+   ENUMS
+   =========================== */
+
+enum CollaboratorStatus {
+  ACTIVO
+  ACTIVO_PERU
+  CAMBIO_CC
+  FINIQUITADO
+  OTRO
+}
+
+enum ChangeType {
+  STATUS_CHANGE
+  SERVICE_CHANGE
+  COST_CENTER_CHANGE
+  CLIENT_CHANGE
+  TARIFA_CHANGE
+  OTHER
+}
+
+enum SyncType {
+  MASTER_SHEET
+  HR_SHEET_CHILE
+  HR_SHEET_PERU
+}
+
+enum SyncStatus {
+  RUNNING
+  SUCCESS
+  ERROR
+  PARTIAL
+}
+
+/* ===========================
+   MODELS
+   =========================== */
+
 model Collaborator {
-  id                    String   @id @default(uuid())
-  rutDni                String   @unique @map("rut_dni")
-  nombre                String
-  estado                String   // Activo, Activo Perú, Cambio CC, Finiquitado, etc.
-  fechaIngresoOficial   DateTime? @map("fecha_ingreso_oficial")
-  fechaIngresoSermaluc  DateTime? @map("fecha_ingreso_sermaluc")
-  fechaFiniquito        DateTime? @map("fecha_finiquito")
-  fechaFinalizacion     DateTime? @map("fecha_finalizacion")
-  
+  id                   String               @id @default(uuid())
+  rutDni               String               @unique @map("rut_dni")
+  nombre               String
+  estado               CollaboratorStatus
+
+  fechaIngresoOficial  DateTime?            @map("fecha_ingreso_oficial")
+  fechaIngresoSermaluc DateTime?            @map("fecha_ingreso_sermaluc")
+  fechaFiniquito       DateTime?            @map("fecha_finiquito")
+  fechaFinalizacion    DateTime?            @map("fecha_finalizacion")
+
   // Relaciones actuales
-  costCenterId          String?  @map("cost_center_id")
-  serviceId             String?  @map("service_id")
-  clientId              String?  @map("client_id")
-  cargo                 String?
-  coordinator           String?
-  tarifa                Decimal? @db.Decimal(10, 2)
-  
+  costCenterId         String?              @map("cost_center_id")
+  serviceId            String?              @map("service_id")
+  clientId             String?              @map("client_id")
+  cargo                String?
+  coordinator          String?
+  tarifa               Decimal?             @db.Decimal(10, 2)
+
   // Relaciones
-  costCenter            CostCenter?  @relation(fields: [costCenterId], references: [id])
-  service               Service?     @relation(fields: [serviceId], references: [id])
-  client                Client?      @relation(fields: [clientId], references: [id])
-  serviceAssignments    ServiceAssignment[]
-  changeLogs            ChangeLog[]
-  
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
-  
+  costCenter           CostCenter?          @relation(fields: [costCenterId], references: [id])
+  service              Service?             @relation(fields: [serviceId], references: [id])
+  client               Client?              @relation(fields: [clientId], references: [id])
+  serviceAssignments   ServiceAssignment[]
+  changeLogs           ChangeLog[]
+
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+
+  @@index([estado])
+  @@index([clientId])
+  @@index([serviceId])
+  @@index([costCenterId])
   @@map("collaborators")
 }
 
 model CostCenter {
-  id            String   @id @default(uuid())
-  code          String   @unique
-  name          String
-  collaborators Collaborator[]
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  
+  id                  String               @id @default(uuid())
+  code                String               @unique
+  name                String
+  collaborators       Collaborator[]
+  serviceAssignments  ServiceAssignment[]
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+
   @@map("cost_centers")
 }
 
 model Service {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  collaborators Collaborator[]
-  serviceAssignments ServiceAssignment[]
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  
+  id                  String               @id @default(uuid())
+  name                String               @unique
+  collaborators       Collaborator[]
+  serviceAssignments  ServiceAssignment[]
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+
   @@map("services")
 }
 
 model Client {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  collaborators Collaborator[]
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  
+  id                  String               @id @default(uuid())
+  name                String               @unique
+  collaborators       Collaborator[]
+  serviceAssignments  ServiceAssignment[]
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+
   @@map("clients")
 }
 
 model ServiceAssignment {
-  id                    String   @id @default(uuid())
-  collaboratorId        String   @map("collaborator_id")
-  serviceId             String   @map("service_id")
-  costCenterId         String?  @map("cost_center_id")
-  clientId             String?  @map("client_id")
-  tarifa                Decimal? @db.Decimal(10, 2)
-  cargo                 String?
-  coordinator           String?
-  fechaCambio           DateTime @map("fecha_cambio")
-  fechaFinalizacion     DateTime? @map("fecha_finalizacion")
-  
-  collaborator          Collaborator @relation(fields: [collaboratorId], references: [id])
-  service               Service      @relation(fields: [serviceId], references: [id])
-  
-  createdAt             DateTime  @default(now()) @map("created_at")
-  
+  id                  String               @id @default(uuid())
+  collaboratorId      String               @map("collaborator_id")
+  serviceId           String               @map("service_id")
+  costCenterId        String?              @map("cost_center_id")
+  clientId            String?              @map("client_id")
+  tarifa              Decimal?             @db.Decimal(10, 2)
+  cargo               String?
+  coordinator         String?
+  fechaCambio         DateTime             @map("fecha_cambio")
+  fechaFinalizacion   DateTime?            @map("fecha_finalizacion")
+
+  collaborator        Collaborator         @relation(fields: [collaboratorId], references: [id])
+  service             Service              @relation(fields: [serviceId], references: [id])
+  costCenter          CostCenter?          @relation(fields: [costCenterId], references: [id])
+  client              Client?              @relation(fields: [clientId], references: [id])
+
+  createdAt           DateTime             @default(now()) @map("created_at")
+
+  @@index([collaboratorId])
+  @@index([serviceId])
+  @@index([costCenterId])
+  @@index([clientId])
   @@map("service_assignments")
 }
 
 model ChangeLog {
-  id              String   @id @default(uuid())
-  collaboratorId  String   @map("collaborator_id")
+  id              String          @id @default(uuid())
+  collaboratorId  String          @map("collaborator_id")
   field           String
-  oldValue        String?  @map("old_value")
-  newValue        String?  @map("new_value")
-  changeType      String   @map("change_type") // status_change, service_change, etc.
-  source          String   // master_sheet, hr_sheet, manual
-  createdAt       DateTime @default(now()) @map("created_at")
-  
-  collaborator   Collaborator @relation(fields: [collaboratorId], references: [id])
-  
+  oldValue        String?         @map("old_value")
+  newValue        String?         @map("new_value")
+  changeType      ChangeType      @map("change_type") // status_change, service_change, etc.
+  source          String          // master_sheet, hr_sheet, manual
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  collaborator    Collaborator    @relation(fields: [collaboratorId], references: [id])
+
+  @@index([collaboratorId])
   @@map("change_logs")
 }
 
 model SyncLog {
-  id              String   @id @default(uuid())
-  syncType        String   @map("sync_type") // master_sheet, hr_sheet_chile, hr_sheet_peru
-  status          String   // success, error, partial
-  recordsProcessed Int     @map("records_processed")
-  recordsCreated  Int      @map("records_created")
-  recordsUpdated  Int      @map("records_updated")
-  errors          Json?
-  startedAt       DateTime @map("started_at")
-  completedAt     DateTime? @map("completed_at")
-  
+  id               String      @id @default(uuid())
+  syncType         SyncType    @map("sync_type")   // master_sheet, hr_sheet_chile, hr_sheet_peru
+  status           SyncStatus  // success, error, partial
+  recordsProcessed Int         @map("records_processed")
+  recordsCreated   Int         @map("records_created")
+  recordsUpdated   Int         @map("records_updated")
+  errors           Json?
+  startedAt        DateTime    @default(now()) @map("started_at")
+  completedAt      DateTime?   @map("completed_at")
+
+  @@index([syncType])
+  @@index([status])
   @@map("sync_logs")
 }
-
