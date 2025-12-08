@@ -23,24 +23,35 @@ export class SyncService {
     this.initializeSheets();
   }
 
-  private async initializeSheets() {
-    try {
-      const serviceAccountKey = this.config.get('GOOGLE_SERVICE_ACCOUNT_KEY');
-      
-      if (!serviceAccountKey) {
-        this.logger.warn('GOOGLE_SERVICE_ACCOUNT_KEY not found, sync will not work');
-        return;
-      }
+private async initializeSheets() {
+  try {
+    const keyJson = this.config.get<string>('GOOGLE_SERVICE_ACCOUNT_KEY');
 
-      const auth = new google.auth.GoogleAuth({
-        keyFile: serviceAccountKey,
-        scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-      });
-      this.sheets = google.sheets({ version: 'v4', auth });
-    } catch (error) {
-      this.logger.error('Failed to initialize Google Sheets API', error);
+    if (!keyJson) {
+      this.logger.warn('GOOGLE_SERVICE_ACCOUNT_KEY not found, sync will not work');
+      return;
     }
+
+    let credentials: any;
+    try {
+      credentials = JSON.parse(keyJson);
+    } catch (e) {
+      this.logger.error('GOOGLE_SERVICE_ACCOUNT_KEY is not valid JSON', e);
+      return;
+    }
+
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+    });
+
+    this.sheets = google.sheets({ version: 'v4', auth });
+    this.logger.log('Google Sheets API initialized');
+  } catch (error) {
+    this.logger.error('Failed to initialize Google Sheets API', error);
   }
+}
+
 
   async syncMasterSheet() {
     if (!this.sheets) {
