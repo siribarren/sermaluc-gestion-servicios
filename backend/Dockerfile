@@ -1,37 +1,33 @@
+# ---------- Build stage ----------
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
+# Dependencias + Prisma
 COPY package*.json ./
 COPY prisma ./prisma/
-
-# Instalar dependencias
 RUN npm ci
-
-# Generar cliente Prisma antes del build
 RUN npx prisma generate
 
-# Copiar el resto del código
+# Código fuente y build
 COPY . .
-
-# Compilar la aplicación
 RUN npm run build
 
-# Imagen de producción
+
+# ---------- Runtime stage ----------
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar dependencias, dist y prisma (incluye el cliente generado)
+# Copiar sólo lo necesario
+COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package*.json ./
 
-# ❌ Eliminar esta línea
-# RUN npx prisma generate
+ENV NODE_ENV=production
+ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main.js"]

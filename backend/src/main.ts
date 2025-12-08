@@ -4,8 +4,10 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const port = process.env.PORT || 3001; // 3001 para local, Cloud Run usará PORT=8080
-  await app.listen(port as number, '0.0.0.0');
-}
+  // 🔴 IMPORTANTE: usar el PORT de la env
+  const port = process.env.PORT ? Number(process.env.PORT) : 8080;
 
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Backend escuchando en puerto ${port}`);
+}
 bootstrap();
