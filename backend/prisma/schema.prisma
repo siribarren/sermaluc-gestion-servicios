@@ -3,8 +3,6 @@ generator client {
   binaryTargets = ["native"]
 }
 
-}
-
 
 datasource db {
   provider = "postgresql"
